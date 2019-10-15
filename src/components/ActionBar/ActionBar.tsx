@@ -1,9 +1,9 @@
-import React, { Component, ReactElement } from 'react';
+import React from 'react';
 import BugReportIcon from '@material-ui/icons/BugReport';
 import DownloadIcon from '@material-ui/icons/CloudDownload';
 import HomeIcon from '@material-ui/icons/Home';
 
-import { DetailContextConsumer, VersionPageConsumerProps } from '../../pages/Version';
+import { DetailContextConsumer } from '../../pages/Version';
 import { isURL, extractFileName, downloadFile } from '../../utils/url';
 import api from '../../utils/api';
 import Tooltip from '../../muiComponents/Tooltip';
@@ -44,89 +44,72 @@ const ACTIONS = {
   },
 };
 
-class ActionBar extends Component {
-  public render(): ReactElement<HTMLElement> {
-    return (
-      <DetailContextConsumer>
-        {context => {
-          const { packageMeta } = context;
+const ActionBar: React.FC = () => (
+  <DetailContextConsumer>
+    {context => {
+      const { packageMeta } = context;
 
-          if (!packageMeta) {
-            return null;
-          }
-
-          return this.renderActionBar(context as VersionPageConsumerProps);
-        }}
-      </DetailContextConsumer>
-    );
-  }
-
-  private renderIconsWithLink(link: string, component: JSX.Element): ReactElement<HTMLElement> {
-    return (
-      <a href={link} target={'_blank'}>
-        {component}
-      </a>
-    );
-  }
-
-  private renderActionBar = ({ packageMeta }) => {
-    const { latest } = packageMeta;
-
-    if (!latest) {
-      return null;
-    }
-
-    const { homepage, bugs, dist } = latest;
-
-    const actionsMap = {
-      homepage,
-      issue: bugs ? bugs.url : null,
-      tarball: dist ? dist.tarball : null,
-    };
-
-    const renderList = Object.keys(actionsMap).reduce((component: React.ReactElement[], value, key) => {
-      const link = actionsMap[value];
-      if (link && isURL(link)) {
-        const actionItem: Action = ACTIONS[value];
-        if (actionItem.handler) {
-          const fab = (
-            <Tooltip key={key} title={actionItem['title']}>
-              <Fab
-                /* eslint-disable react/jsx-no-bind */
-                onClick={() => {
-                  /* eslint-disable @typescript-eslint/no-non-null-assertion */
-                  actionItem.handler!(link);
-                }}
-                size={'small'}>
-                {actionItem['icon']}
-              </Fab>
-            </Tooltip>
-          );
-          component.push(fab);
-        } else {
-          const fab = <Fab size={'small'}>{actionItem['icon']}</Fab>;
-          component.push(
-            <Tooltip key={key} title={actionItem['title']}>
-              <>{this.renderIconsWithLink(link, fab)}</>
-            </Tooltip>
-          );
-        }
+      if (!packageMeta) {
+        return null;
       }
-      return component;
-    }, []);
 
-    if (renderList.length > 0) {
-      return (
-        <List>
-          <ActionListItem alignItems={'flex-start'} button={true}>
-            {renderList}
-          </ActionListItem>
-        </List>
-      );
-    }
+      const { latest } = packageMeta;
 
-    return null;
-  };
-}
+      if (!latest) {
+        return null;
+      }
+
+      const { homepage, bugs, dist } = latest;
+
+      const actionsMap = {
+        homepage,
+        issue: bugs ? bugs.url : null,
+        tarball: dist ? dist.tarball : null,
+      };
+
+      const renderList = Object.keys(actionsMap).reduce((component: React.ReactElement[], value, key) => {
+        const link = actionsMap[value];
+        if (link && isURL(link)) {
+          const actionItem: Action = ACTIONS[value];
+          if (actionItem.handler) {
+            component.push(
+              <Tooltip key={key} title={actionItem['title']}>
+                <Fab
+                  /* eslint-disable react/jsx-no-bind */
+                  onClick={() => {
+                    actionItem.handler && actionItem.handler(link);
+                  }}
+                  size={'small'}>
+                  {actionItem['icon']}
+                </Fab>
+              </Tooltip>
+            );
+          } else {
+            component.push(
+              <Tooltip key={key} title={actionItem['title']}>
+                <a href={link} target={'_blank'}>
+                  {component}
+                </a>
+              </Tooltip>
+            );
+          }
+        }
+        return component;
+      }, []);
+
+      if (renderList.length > 0) {
+        return (
+          <List>
+            <ActionListItem alignItems={'flex-start'} button={true}>
+              {renderList}
+            </ActionListItem>
+          </List>
+        );
+      }
+
+      return null;
+    }}
+  </DetailContextConsumer>
+);
 
 export { ActionBar };

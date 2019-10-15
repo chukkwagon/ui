@@ -8,9 +8,14 @@ export interface PackageMetaInterface {
     dist: {
       fileCount: number;
       unpackedSize: number;
+      tarball: string;
     };
     license?: Partial<LicenseInterface> | string;
     version: string;
+    homepage: string;
+    bugs: {
+      url: string;
+    };
   };
   _uplinks: {};
 }
